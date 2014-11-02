@@ -1,0 +1,9 @@
+## parameters
+temp         1.2          # temperature
+f            p            # boundary condition
+ve           yes          # volume exluded on or off
+sf           yes          # persistence length on or off
+wca          yes          # wca potential on or off 
+r_cutoff     1.12246      # pairwise vdw cutoff
+K            100          # spring constant for bond potential
+G            2.4          # spring constant for angel potential  
