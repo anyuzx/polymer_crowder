@@ -224,7 +224,7 @@ with open(input_filename+".txt","w") as f:
 	f.write("velocity".ljust(15) + "all create " + str(temp)+ " " + str(random_seed[0])+"\n")
 	f.write("fix".ljust(15) + "1 all nve\n")
 	f.write("fix".ljust(15) + "2 all langevin " + str(temp) + "  " + str(temp) + "  1.0  " +str(random_seed[1])+"\n")
-	if pc == 's' and n < 80:
+	if pc == 's':
 		f.write("fix".ljust(15)+"3 all recenter INIT INIT INIT\n")
 	f.write("thermo_style".ljust(15) + "custom step cpuremain temp c_Rg v_Rd evdwl ebond eangle\n")
 	f.write("thermo".ljust(15)+str(5000)+"\n")

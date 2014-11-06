@@ -13,7 +13,7 @@ for G in 0
 do
 	for j in {1..100}
 	do
-		python polymer_datafile.py -n ${n} -l ${l0} -f s -v -o wlc_lj_n${n}_G${G}_data_${j}
+		#python polymer_datafile.py -n ${n} -l ${l0} -f s -v -o wlc_lj_n${n}_G${G}_data_${j}
 		python polymer_inputfile.py -i wlc_lj_n${n}_G${G}_data_${j} -o wlc_lj_n${n}_G${G}_${j} -n ${n} -t 1.2 -d 50000000 -l ${l0} -v lj -k ${K} -f s wlc_lj_n${n}_G${G}_input_${j}
 		#mkdir wlc_lj_n${n}_G${G}_${j}_traj
 	done
