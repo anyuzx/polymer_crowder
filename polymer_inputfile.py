@@ -228,7 +228,7 @@ with open(input_filename+".txt","w") as f:
 		f.write("fix".ljust(15)+"3 all recenter INIT INIT INIT\n")
 	f.write("thermo_style".ljust(15) + "custom step cpuremain temp c_Rg v_Rd evdwl ebond eangle\n")
 	f.write("thermo".ljust(15)+str(5000)+"\n")
-        f.write("dump".ljust(15)+"1 all custom " + str(50000) + " ${output}_traj id mass x y z vx vy vz\n")
+        f.write("dump".ljust(15)+"1 all custom " + str(5000) + " ${output}_traj id mass x y z vx vy vz\n")
 	f.write("dump_modify".ljust(15)+"1 append yes\n")
 	f.write("timestep".ljust(15)+str(0.01)+"\n")
 	f.write("run".ljust(15)+str(duration)+"\n")

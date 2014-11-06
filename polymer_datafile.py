@@ -5,6 +5,7 @@
 import numpy as np
 from math import *
 import getopt, sys
+import lattice_SAW    # import the lattice_SAW module
 
 ##############################################################################
 try:
@@ -97,68 +98,10 @@ except NameError:
     print "-f <boundary condition> s: shrink-wrapping p:periodic boundary"
     sys.exit()
 ###################################################################################
-# define a rotation matrix
-# 9 possible rotations: 3 axes * 3 possible rotate angles(90,180,270)
-rotate_matrix = np.array([[[1,0,0],[0,0,-1],[0,1,0]],[[1,0,0],[0,-1,0],[0,0,-1]]\
-    ,[[1,0,0],[0,0,1],[0,-1,0]],[[0,0,1],[0,1,0],[-1,0,0]]\
-    ,[[-1,0,0],[0,1,0],[0,0,-1]],[[0,0,-1],[0,1,0],[-1,0,0]]\
-    ,[[0,-1,0],[1,0,0],[0,0,1]],[[-1,0,0],[0,-1,0],[0,0,1]]\
-    ,[[0,1,0],[-1,0,0],[0,0,1]]])
-
-# define a dot product function
-def v_dot(a):return lambda b: np.dot(a,b)
-###################################################################################
-# Pivot algorithm for generating a 3-D random self-avoiding lattice chain
-# this configuration will be used as intial configuration of polymer in simulation
-# Pivot algorithm:
-# 1. Use a one-dimension straight chain as starting configuration
-# 2. randomly choose a site on the chain as pivot site
-# 3. keep all sites before pivot site the same, apply a lattice symmetry on all the rest sites after pivot site
-# 4. if the resulting chain overlaps, reject otherwise accecpt
-# 5. repeat from step 2.
-# this method is much faster to generate a proper initial configuration than trying to do it in a continum way
-# the reason why not just to prepare a straight chain is because in that way the box size will be much larger
-def lattice_SAW(N,l0,ve):
-    chain = np.dstack((np.arange(N),np.zeros(N),np.zeros(N)))[0]
-    acpt = 0
-    while acpt <= N:
-        pick_pivot = np.random.randint(1,N-1)
-        pick_side = np.random.choice([-1,1])
-        if pick_side == 1:
-            old_chain = chain[0:pick_pivot+1]        # chain before the pivot
-            temp_chain = chain[pick_pivot+1:]         # chain after the pivot
-        else:
-            old_chain = chain[pick_pivot:]        # chain after the pivot
-            temp_chain = chain[0:pick_pivot]         # chain before the pivot
-        symtry_oprtr = rotate_matrix[np.random.randint(len(rotate_matrix))]     # symmetry operator
-        new_chain = np.apply_along_axis(v_dot(symtry_oprtr),1,temp_chain - chain[pick_pivot]) + chain[pick_pivot]     # new chain after symmetry operator
-
-        # now compare the new_chain with old_chain to check overlaps
-        if ve:
-            nrows, ncols = new_chain.shape
-            dtype = {'names':['f{}'.format(i) for i in range(ncols)],'formats':ncols*[new_chain.dtype]}
-            repeat_site = np.intersect1d(new_chain.view(dtype),old_chain.view(dtype))
-            repeat_site = repeat_site.view(new_chain.dtype).reshape(-1,ncols)
-
-        
-            # make new chain
-            if len(repeat_site) == 0:
-                if pick_side == 1:
-                    chain = np.concatenate((old_chain,new_chain),axis = 0)
-                elif pick_side == -1:
-                    chain = np.concatenate((new_chain,old_chain),axis = 0)
-                acpt += 1
-            elif len(repeat_site) > 0:
-                continue
-        else:
-            if pick_side == 1:
-                chain = np.concatenate((old_chain,new_chain),axis = 0)
-            elif pick_side == -1:
-                chain = np.concatenate((new_chain,old_chain),axis = 0)
-            acpt += 1
-
-    chain = chain - np.int_(np.mean(chain,axis=0))
-    return l0*chain
+if ve:
+    vee = 1
+else:
+    vee = 0
 
 # create a straight chain
 def straight_chain(N,l0):
@@ -172,7 +115,8 @@ def make_chain_box(N,l0,pc,ve,sf):
     if sf:
         chain = straight_chain(N,l0)
     else:
-        chain = lattice_SAW(N,l0,ve)
+        chain = lattice_SAW.lattice_SAW(N,l0,vee)
+        chain = chain.reshape(N,3)
 
     if pc == 's':
         l = np.amax(np.fabs(chain))
