@@ -12,7 +12,7 @@
 
 using namespace std;
 
-void c_lattice_SAW(double* chain, int N, double l0, int ve){
+void c_lattice_SAW(double* chain, int N, double l0, int ve, int t){
     int i, j;
     int acpt=0, duplicate;
     int pick_pivot, pick_side, pick_rotate;
@@ -48,7 +48,7 @@ void c_lattice_SAW(double* chain, int N, double l0, int ve){
     
     // pivot algorithm. The number of successful rotating operations
     // need to be the same as the number of steps
-    while (acpt <= N){
+    while (acpt <= t){
         // duplicate is used to check whether there are duplicate steps
         // after rotating.
         duplicate = 0;
@@ -198,7 +198,7 @@ void c_lattice_SAW(double* chain, int N, double l0, int ve){
     c_z = c_z/N;
     int c_r[3] = {int(c_x),int(c_y),int(c_z)};
     
-    // loop throught the chain. move the chain to center and mulitply by step size.
+    // loop over the chain. move the chain to center and mulitply by step size.
     for (i=0;i<N;i++){
         for (j=0;j<3;j++){
             chain[i*3+j] = l0*(chain[i*3+j]-c_r[j]);

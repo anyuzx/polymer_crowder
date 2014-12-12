@@ -1,1 +1,1 @@
-void c_lattice_SAW(double* chain, int N, double l0, int ve);
+void c_lattice_SAW(double* chain, int N, double l0, int ve, int t);
