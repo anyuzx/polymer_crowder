@@ -5,11 +5,15 @@
 import numpy as np
 from math import *
 import getopt, sys
-import lattice_SAW    # import the lattice_SAW module
+#import lattice_SAW    # import the lattice_SAW module
+#import CRLM_generate
+import loopmodel
+#import myPackage.tools.lattice_SAW as lattice_SAW
+import lattice_SAW
 
 ##############################################################################
 try:
-    optlist, args = getopt.getopt(sys.argv[1:],'n:l:vao:f:h')
+    optlist, args = getopt.getopt(sys.argv[1:],'n:l:vao:f:c:hi:',['mode='])
 except getopt.GetoptError as err:
     print str(err)
     print "Command syntax: -n <number of monomers> -l <bond length> -o <output filename>"
@@ -17,6 +21,7 @@ except getopt.GetoptError as err:
 
 ve = False
 sf = False
+mode = 0
 for opt, arg in optlist:
     if opt == '-n':
         try:
@@ -35,6 +40,9 @@ for opt, arg in optlist:
         print "Options:"
         print "-v       : volume exclusion is set to be True(default is False)"
         print "-a       : chain persistence is set to be True(default is False)"
+        print "-i       : pair file"
+        print "-c       : number of constrains(Random Constrain Gaussian Model)"
+        print "-L       : enable Random Consecutive Loop Model"
         print ""
         print "DISCREPTION:"
         print "If chain persistence is set to be TRUE, chain will always be generated as a straight chain, \
@@ -72,6 +80,21 @@ Chain will be roughly put in the center."
             print "Error: please specify boundary condition"
             print "-f <boundary condition> s: shrink-wrapping p:periodic boundary"
             sys.exit()
+    elif opt == "-c":
+        try:
+            nconstr = int(arg)
+        except:
+            print "Error: please specify the number of internal constrains"
+            sys.exit()
+    elif opt == '-i':
+        try:
+            pair_file = arg
+        except:
+            print 'Error: please specify the loop file'
+            sys.exit()
+    elif opt == '--mode':
+        mode = arg
+
 
 try:
     N
@@ -103,6 +126,22 @@ if ve:
 else:
     vee = 0
 
+
+# define a function to choose random constrains
+def giveloops(N,M):
+    if M == 0:
+        return []
+    else:
+        l = np.arange((N-1)*(N-2)/2)+1
+        c = np.random.choice(l,M,replace=False)
+        k = np.ceil((-3+np.sqrt(1+8*c))/2)
+        a = (N-2) - k
+        b = N - k + c - k*(1+k)/2 - 1
+        if M > 1:
+            return np.array([np.int_(a),np.int_(b)]).T
+        elif M == 1:
+            return np.array([[np.int_(a)],[np.int_(b)]]).T
+
 # create a straight chain
 def straight_chain(N,l0):
     chain = np.dstack((l0*np.arange(N),np.zeros(N),np.zeros(N)))[0]
@@ -111,11 +150,25 @@ def straight_chain(N,l0):
 ###################################################################################
 # Generate the random polymer chain and simulation box dimension
 # two cases: excluded-volume and no excluded-volume
-def make_chain_box(N,l0,pc,ve,sf):
-    if sf:
-        chain = straight_chain(N,l0)
+def make_chain_box(N,l0,pc,ve,sf,mode):
+    if mode == 'llm':
+        a = loopmodel.LoopModel(N,nconstr)
+        a.LLM(200,loopdist='gaussian')
+        chain,pair = a.givechain()
+    elif mode == 'rsm':
+        a = loopmodel.LoopModel(N,nconstr)
+        a.RSM(100,rossete=1,loopdist='gaussian')
+        chain,pair = a.givechain(SAW=False)
+    elif mode == 'clm':
+        a = loopmodel.LoopModel(N,nconstr)
+        a.CLM()
+        chain,pair = a.givechain(SAW=True)
+    elif sf:
+        #chain = straight_chain(N,l0)
+        chain = lattice_SAW.lattice_SAW(N,l0,ve,10*N)
+        chain = chain.reshape(N,3)
     else:
-        chain = lattice_SAW.lattice_SAW(N,l0,vee,N)
+        chain = lattice_SAW.lattice_SAW(N,l0,ve,10*N)
         chain = chain.reshape(N,3)
 
     if pc == 's':
@@ -123,21 +176,28 @@ def make_chain_box(N,l0,pc,ve,sf):
         box_dimension = np.array([[-l-5*l0,l+5*l0],[-l-5*l0,l+5*l0],[-l-5*l0,l+5*l0]])
     elif pc == 'p':
         box_dimension = np.array([[-(N+10)*l0/2,(N+10)*l0/2],[-(N+10)*l0/2,(N+10)*l0/2],[-(N+10)*l0/2,(N+10)*l0/2]])
-    return chain, box_dimension
+    
+    if mode == 'llm' or mode == 'rsm' or mode == 'clm':
+        return chain, box_dimension, pair
+    else:
+        return chain, box_dimension
 ###################################################################################
-chain, box_dimension = make_chain_box(N,l0,pc,ve,sf)
+if mode == 'llm' or mode == 'rsm' or mode == 'clm':
+    chain, box_dimension, pair = make_chain_box(N,l0,pc,ve,sf,mode)
+else:
+    chain, box_dimension = make_chain_box(N,l0,pc,ve,sf,mode)
 mass = 1.0
 
 with open(output_name,'w') as f:
     f.write("Data file for polymer chain   Volume Exclusion:" + str(ve)+"   Chain persistence:"+str(sf)+"\n\n")
     f.write(str(N)+"  atoms    # number of monomers\n")
-    f.write(str(N-1)+"  bonds    # number of bonds between monomers\n")
+    f.write(str(N-1+nconstr)+"  bonds    # number of bonds between monomers\n")
     if sf:
         f.write(str(N-2)+"  angles    # semiflexible chain. Angle harmonic potential\n")
     f.write("\n")
      
     f.write("1  atom types    # number of atom types\n")
-    f.write("1  bond types    # number of bond types\n")
+    f.write("2  bond types    # number of bond types\n")
     if sf:
         f.write("1  angle types    # number of angle types\n")
     f.write("\n")
@@ -158,6 +218,19 @@ with open(output_name,'w') as f:
     f.write("Bonds\n\n")
     for i in range(1,len(chain)):
         f.write(str(i).ljust(10)+str(1).ljust(10)+str(i).ljust(10)+str(i+1).ljust(10)+"\n")
+
+    # write the random internal constrains
+    try:
+        if pair_file:
+            with open(pair_file,'r') as ff:
+                for i, line in enumerate(ff):
+                    f.write(str(N+i).ljust(10)+str(2).ljust(10)+line.split()[0].ljust(10)+line.split()[1]+'\n')
+    except:
+        if mode == 'llm' or mode == 'rsm' or mode == 'clm':
+            i = 0
+            for item in pair:
+                f.write(str(N+i).ljust(10)+str(2).ljust(10)+str(item[0]).ljust(10)+str(item[1])+'\n')
+                i += 1
 
     if sf:
         f.write("\n")

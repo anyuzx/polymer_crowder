@@ -193,9 +193,10 @@ with open(input_filename,"w") as f:
 		f.write("neighbor".ljust(15)+"2.0 bin\n")
 	if ve == False:
 		f.write("atom_modify".ljust(15)+"sort 0 0.0\n")                    # if no pairwise interaction, atom sort need to be off
-		f.write("comm_modify".ljust(15)+"cutoff "+str(l0*1.35)+"\n")       # if no pairwise interaction, a ghost cutoff need to be set larger than the bond length
+		f.write("comm_modify".ljust(15)+"cutoff "+str(100)+"\n")       # if no pairwise interaction, a ghost cutoff need to be set larger than the bond length
 	f.write("bond_style".ljust(15)+"harmonic\n")
-	f.write("bond_coeff".ljust(15)+"1 " + str(k) + " " + str(l0) + "\n")
+	f.write("bond_coeff".ljust(15)+"1 " + str(k) + " " + str(1.13) + "\n")
+	f.write("bond_coeff".ljust(15)+"2 " + str(k) + " " + str(1.13) + "\n")
 	if sf != False:
 		f.write("angle_style".ljust(15)+"harmonic\n")
 		f.write("angle_coeff".ljust(15)+"1 " + str(sf) +" 180.0\n")
@@ -223,17 +224,41 @@ with open(input_filename,"w") as f:
     	#	f.write("compute".ljust(15)+"peangle all pe/atom angle\n")
 	f.write("velocity".ljust(15) + "all create " + str(temp)+ " " + str(random_seed[0])+"\n")
 	f.write("fix".ljust(15) + "1 all nve\n")
-	f.write("fix".ljust(15) + "2 all langevin " + str(temp) + "  " + str(temp) + "  1.0  " +str(random_seed[1])+"\n")
+	f.write("fix".ljust(15) + "2 all langevin " + str(temp) + "  " + str(temp) + "  100.0  " +str(random_seed[1])+"\n")
 	if pc == 's':
 		f.write("fix".ljust(15)+"3 all recenter INIT INIT INIT\n")
 	f.write("thermo_style".ljust(15) + "custom step cpuremain temp c_Rg c_Rg[1] c_Rg[2] c_Rg[3] c_Rg[4] c_Rg[5] c_Rg[6] v_Rd evdwl ebond eangle\n")
 	f.write("thermo".ljust(15)+str(100)+"\n")
         f.write("dump".ljust(15)+"1 all custom " + str(500) + " ${output}_traj id mass x y z vx vy vz\n")
 	f.write("dump_modify".ljust(15)+"1 append yes\n")
+
+	#f.write("timestep".ljust(15)+str(0.00001)+"\n")
+	#f.write("run".ljust(15)+str(100000)+"\n")
+
+	#f.write("timestep".ljust(15)+str(0.00005)+"\n")
+	#f.write("run".ljust(15)+str(100000)+"\n")
+
+	#f.write("timestep".ljust(15)+str(0.0001)+"\n")
+	#f.write("run".ljust(15)+str(100000)+"\n")
+
+	#f.write("timestep".ljust(15)+str(0.0005)+"\n")
+	#f.write("run".ljust(15)+str(100000)+"\n")
+
+	#f.write("timestep".ljust(15)+str(0.001)+"\n")
+	#f.write("run".ljust(15)+str(100000)+"\n")
+
+	#f.write("timestep".ljust(15)+str(0.001)+"\n")
+	#f.write("run".ljust(15)+str(100000)+"\n")
+
+	#f.write("timestep".ljust(15)+str(0.005)+"\n")
+	#f.write("run".ljust(15)+str(500000)+"\n")
+
+	#f.write("timestep".ljust(15)+str(0.008)+"\n")
+	#f.write("run".ljust(15)+str(500000)+"\n")
+
 	f.write("timestep".ljust(15)+str(0.01)+"\n")
-	f.write("run".ljust(15)+str(duration/2)+"\n")
-	f.write("fix".ljust(15) + "2 all langevin " + str(1.2) + "  " + str(1.2) + "  1.0  " +str(random_seed[1])+"\n")
-	f.write("run".ljust(15)+str(duration/2)+"\n")
+	f.write("run".ljust(15)+str(10000000)+"\n")
+	
 	f.write("write_restart".ljust(15)+"restart.${output}.*\n")
 	f.write("\n")
 

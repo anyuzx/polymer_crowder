@@ -112,11 +112,14 @@ def straight_chain(N,l0):
 # Generate the random polymer chain and simulation box dimension
 # two cases: excluded-volume and no excluded-volume
 def make_chain_box(N,l0,pc,ve,sf):
-    if sf:
-        chain = straight_chain(N,l0)
-    else:
-        chain = lattice_SAW.lattice_SAW(N,l0,vee,N)
-        chain = chain.reshape(N,3)
+    #if sf:
+    #    chain = straight_chain(N,l0)
+    #else:
+    #    chain = lattice_SAW.lattice_SAW(N,l0,vee,N)
+    #    chain = chain.reshape(N,3)
+
+    chain = lattice_SAW.lattice_SAW(N,l0,vee,N)
+    chain = chain.reshape(N,3)
 
     if pc == 's':
         l = np.amax(np.fabs(chain))
@@ -132,14 +135,12 @@ with open(output_name,'w') as f:
     f.write("Data file for polymer chain   Volume Exclusion:" + str(ve)+"   Chain persistence:"+str(sf)+"\n\n")
     f.write(str(N)+"  atoms    # number of monomers\n")
     f.write(str(N-1)+"  bonds    # number of bonds between monomers\n")
-    if sf:
-        f.write(str(N-2)+"  angles    # semiflexible chain. Angle harmonic potential\n")
+    f.write(str(N-2)+"  angles    # semiflexible chain. Angle harmonic potential\n")
     f.write("\n")
      
     f.write("1  atom types    # number of atom types\n")
     f.write("1  bond types    # number of bond types\n")
-    if sf:
-        f.write("1  angle types    # number of angle types\n")
+    f.write("1  angle types    # number of angle types\n")
     f.write("\n")
     
     f.write(str("%.4f" % box_dimension[0,0]) + " " + str("%.4f" % box_dimension[0,1]) + " xlo" + " xhi\n")
@@ -159,8 +160,8 @@ with open(output_name,'w') as f:
     for i in range(1,len(chain)):
         f.write(str(i).ljust(10)+str(1).ljust(10)+str(i).ljust(10)+str(i+1).ljust(10)+"\n")
 
-    if sf:
-        f.write("\n")
-        f.write("Angles\n\n")
-        for i in range(1,len(chain)-1):
-            f.write(str(i).ljust(10)+str(1).ljust(10)+str(i).ljust(10)+str(i+1).ljust(10)+str(i+2).ljust(10)+"\n")
+    f.write("\n")
+    f.write("Angles\n\n")
+    for i in range(1,len(chain)-1):
+        f.write(str(i).ljust(10)+str(1).ljust(10)+str(i).ljust(10)+str(i+1).ljust(10)+str(i+2).ljust(10)+"\n")
+
